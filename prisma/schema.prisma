@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String   // 'admin' or 'seller'
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sales Sale[]
+
+  @@map("users")
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  category    String
+  price       Float
+  stock       Int
+  minStock    Int
+  expiryDate  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  sales         Sale[]
+  stockMovements StockMovement[]
+  returns       Return[]
+
+  @@map("products")
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  productId     String
+  userId        String
+  quantity      Int
+  totalPrice    Float
+  paymentMethod String   // 'cash', 'card', 'transfer', 'other'
+  deliveryType  String   // 'pickup', 'delivery'
+  createdAt     DateTime @default(now())
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@map("sales")
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  productId String
+  type      String   // 'in', 'out'
+  quantity  Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("stock_movements")
+}
+
+model Return {
+  id        String   @id @default(cuid())
+  productId String
+  quantity  Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("returns")
+}
